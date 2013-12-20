@@ -7,10 +7,8 @@
 #define ESC 27
 #define BX 5
 #define BY 1
-#define BW 10
+#define BW 20
 #define BH 20
-
- 
 
 void DrawScreen();
 void DrawBoard();
@@ -19,8 +17,6 @@ void PrintBrick(BOOL Show);
 int GetAround(int x,int y,int b,int r);
 BOOL MoveDown();
 void TestFull();
-
- 
 
 struct Point {
 
@@ -46,7 +42,6 @@ Point Shape[][4][4]={
 
 };
 
- 
 
 enum { EMPTY, BRICK, WALL };
 
@@ -160,11 +155,26 @@ void DrawScreen()
 
  
 
-     gotoxy(50,3);puts("Tetris Ver 1.0");
+     gotoxy(50,2);puts("Dungeon Crawl Ver 1.0");
+     gotoxy(50,4);puts("좌우위아래:이동");
+     gotoxy(50,5);puts("z:아이템 먹기");
+	 gotoxy(50,6);puts("x:공격");
+	 
+	 //character status는 다른데서 print하는게 좋을랑가! 
+	 gotoxy(50,8);puts("character status");
+	 gotoxy(50,9);puts("Level: ");
+	 gotoxy(50,10);puts("HP:");
+	 gotoxy(50,11);puts("Strength: ");
+	 gotoxy(50,12);puts("Defense");
+	 gotoxy(50,13);puts("Items: ");
 
-     gotoxy(50,5);puts("좌우:이동, 위:회전, 아래:내림");
-
-     gotoxy(50,6);puts("공백:전부 내림");
+	 //monster만났을 때 생기는 부분
+	 gotoxy(50,15);puts("Monster status");
+	 gotoxy(50,16);puts("Level: ");
+	 gotoxy(50,17);puts("HP:");
+	 gotoxy(50,18);puts("Strength: ");
+	 gotoxy(50,19);puts("Defense");
+	 gotoxy(50,20);puts("Items: ");
 
 }
 
