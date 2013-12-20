@@ -7,8 +7,8 @@
 #define ESC 27
 #define BX 5
 #define BY 1
-#define BW 20
-#define BH 20
+#define BW 15
+#define BH 15
 
 void DrawScreen();
 void DrawBoard();
@@ -45,7 +45,9 @@ Point Shape[][4][4]={
 
 enum { EMPTY, BRICK, WALL };
 
-char *arTile[]={". ","бс","бр"};
+char *arTile[]={". ","б┘","бр"};
+
+//char character="б┘";
 
 int board[BW+2][BH+2];
 
@@ -72,13 +74,9 @@ void main()
      clrscr();
 
      for (x=0;x<BW+2;x++) {
-
           for (y=0;y<BH+2;y++) {
-
               board[x][y] = (y==0 || y==BH+1 || x==0 || x==BW+1) ? WALL:EMPTY;
-
           }
-
      }
 
      DrawScreen();
@@ -89,7 +87,7 @@ void main()
 
      for (;1;) {
 
-          brick=random(sizeof(Shape)/sizeof(Shape[0]));
+          brick= random(sizeof(Shape)/sizeof(Shape[0]));
 
           nx=BW/2;
 
@@ -111,7 +109,7 @@ void main()
 
                    nStay=nFrame;
 
-                   if (MoveDown()) break;
+                   //if (MoveDown()) break;
 
               }
 
@@ -305,8 +303,6 @@ void PrintBrick(BOOL Show)
 {
 
      int i;
-
- 
 
      for (i=0;i<4;i++) {
 
