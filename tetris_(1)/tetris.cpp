@@ -14,9 +14,10 @@ void DrawScreen();
 void DrawBoard();
 BOOL ProcessKey();
 void PrintBrick(BOOL Show);
-int GetAround(int x,int y,int b,int r);
-BOOL MoveDown();
-void TestFull();
+//int GetAround(int x,int y,int b,int r);
+//BOOL MoveDown();
+//void TestFull();
+void printposition(bool check);
 
 struct Point {
 
@@ -30,14 +31,15 @@ enum { EMPTY, CHARACTER, WALL, BOSS, TRASH, MID, HP, DEFENSE, STRENGTH };
 
 char *arTile[]={"  ","☆","□","※","% ","§ ","♡","♤","♨" };
 
-struct characterinfo{//☆
-int level;
-int HP;
-int strength;
-int defense;
-int EXP;
 
-};
+int character_level;
+int character_fullHP;
+int character_HP;
+int character_strength;
+int character_defense;
+int character_fullEXP;
+int character_EXP;
+int nx,ny;//character position
 
 struct bossinfo{//※
 int HP,strength,defense;
@@ -84,7 +86,7 @@ int strength_giving=1;
 
 int board[BW+2][BH+2];
 
-int nx,ny;//character position
+
 
 int brick, rot;
  
@@ -93,57 +95,66 @@ void main()
 
 {
 
-     int nFrame, nStay;
+     //int nFrame, nStay;
 
      int x,y;
 
- 
-	 //setcursortype(NORMALCURSOR);
      setcursortype(NOCURSOR);
 
      randomize();
 
      clrscr();
 
-     for (x=0;x<BW+2;x++) {
+     for (x=0;x<=BW+2;x++) {
           for (y=0;y<BH+2;y++) {
-              board[x][y] = (y==0 ||y==BH+1||x==0 ||x==1||x==BW+1) ? WALL:EMPTY;
+              board[x][y] = (y==0 ||y==BH+1||x==0 ||x==1||x==BW+1||x==BW+2) ? WALL:EMPTY;
           }
      }
+	 board[4][1]=BOSS;
+	 gotoxy(4,1);
+	 puts(arTile[board[BX+4][BY+1]]);
+
+			character_level=1;
+			character_fullHP=100;
+			character_HP=100;
+			character_strength=1;
+			character_defense=1;
+			character_fullEXP;
+			character_EXP=0;
 
      DrawScreen();
 
-     nFrame=20;
+     //nFrame=20;
 
  
 
-     for (;1;) {
+     //for (;1;) {
 
           brick= 1; //random(sizeof(Shape)/sizeof(Shape[0]));
 
-          nx=BW/2;
+          nx=2;
 
-          ny=3;
+          ny=1;
 
-          rot=0;
+
 
           PrintBrick(TRUE);
 
  
 
-          if (GetAround(nx,ny,brick,rot) != EMPTY) break;
+          //if (GetAround(nx,ny,brick,rot) != EMPTY) break;
 
-          nStay=nFrame;
+          //nStay=nFrame;
 
           for (;2;) {
 
-              if (--nStay == 0) {
+            //  if (--nStay == 0) {
 
-                   nStay=nFrame;
+                   //nStay=nFrame;
 
                    //if (MoveDown()) break;
 
-              }
+             // }
 
               if (ProcessKey()) break;
 
@@ -151,7 +162,7 @@ void main()
 
           }
 
-     }
+    // }
 
      clrscr();
 
@@ -180,36 +191,33 @@ void DrawScreen()
               puts(arTile[board[x][y]]);
 
           }
-
+		  
      }
-	 for(y=0;y<BH+2;y++){
-		gotoxy(BX+x,BY+y);
-		puts(arTile[board[BW+x][y]]);
-	 }
+
 
  
 
-     gotoxy(50,2);puts("Dungeon Crawl Ver 1.0");
-     gotoxy(50,4);puts("좌우위아래:이동");
-     gotoxy(50,5);puts("z:아이템 먹기");
-	 gotoxy(50,6);puts("x:공격");
+     gotoxy(52,2);puts("Dungeon Crawl Ver 1.0");
+     gotoxy(52,4);puts("좌우위아래:이동");
+     gotoxy(52,5);puts("z:아이템 먹기");
+	 gotoxy(52,6);puts("x:공격");
 	 
 	 //character status는 다른데서 print하는게 좋을랑가! 
-	 gotoxy(50,8);puts("character status");
-	 gotoxy(50,9);puts("Level: ");
-	 gotoxy(50,10);puts("HP:");
-	 gotoxy(50,11);puts("Strength: ");
-	 gotoxy(50,12);puts("Defense");
-	 gotoxy(50,13);puts("Items: ");
-	 gotoxy(50,14);printf("character position: %d, %d",nx,ny);
+	 gotoxy(52,8);printf("<character status>");
+	 gotoxy(52,9);printf("Level: %d",character_level);
+	 gotoxy(52,10);printf("HP: %3d",character_HP);
+	 gotoxy(52,11);printf("Strength: %2d",character_strength);
+	 gotoxy(52,12);printf("Defense: %2d",character_defense);
+	 //gotoxy(52,13);printf("Items: ");
+
 
 	 //monster만났을 때 생기는 부분
-	 gotoxy(50,15);puts("Monster status");
-	 gotoxy(50,16);puts("Level: ");
-	 gotoxy(50,17);puts("HP:");
-	 gotoxy(50,18);puts("Strength: ");
-	 gotoxy(50,19);puts("Defense");
-	 gotoxy(50,20);puts("Items: ");
+	 gotoxy(52,15);puts("Monster status");
+	 gotoxy(52,16);puts("Level: ");
+	 gotoxy(52,17);puts("HP:");
+	 gotoxy(52,18);puts("Strength: ");
+	 gotoxy(52,19);puts("Defense");
+	 //gotoxy(52,20);puts("Items: ");
 
 }
 
@@ -223,7 +231,7 @@ void DrawBoard()
 
  
 
-     for (x=1;x<BW+1;x++) {
+     for (x=1;x<BW+3;x++) {
 
           for (y=1;y<BH+1;y++) {
 
@@ -259,11 +267,11 @@ BOOL ProcessKey()
 
               case LEFT:
 
-                   if (board[nx-1][ny] == EMPTY) {
+                   if (board[nx-2][ny] == EMPTY) {
 
                         PrintBrick(FALSE);
 
-                        nx--;
+                        nx-=2;
 
                         PrintBrick(TRUE);
 
@@ -273,15 +281,18 @@ BOOL ProcessKey()
 
               case RIGHT:
 
-                   if (board[nx+1][ny] == EMPTY) {
+                   if (board[nx+2][ny] == EMPTY) {
 
                         PrintBrick(FALSE);
 
-                        nx++;
+                        nx+=2;
 
                         PrintBrick(TRUE);
 
                    }
+				   else if(board[nx+2][ny]==BOSS){
+						
+				   }
 
                    break;
 
@@ -347,12 +358,12 @@ BOOL ProcessKey()
 
           }
 
-     }
 
+     }
+		 gotoxy(52,14);printf("character position: %2d, %2d", nx, ny);
      return FALSE;
 
 }
-
  
 
 void PrintBrick(BOOL Show)
@@ -402,7 +413,7 @@ BOOL MoveDown()
 
      if (GetAround(nx,ny+1,brick,rot) != EMPTY) {
 
-          TestFull();
+         // TestFull();
 
           return TRUE;
 
