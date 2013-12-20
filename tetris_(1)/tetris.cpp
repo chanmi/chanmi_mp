@@ -5,9 +5,9 @@
 #define UP 72
 #define DOWN 80
 #define ESC 27
-#define BX 5
-#define BY 1
-#define BW 15
+#define BX 5//board location
+#define BY 3//board location
+#define BW 30
 #define BH 15
 
 void DrawScreen();
@@ -24,37 +24,69 @@ struct Point {
 
 };
 
-Point Shape[][4][4]={
 
-     { {0,0,1,0,2,0,-1,0}, {0,0,0,1,0,-1,0,-2}, {0,0,1,0,2,0,-1,0}, {0,0,0,1,0,-1,0,-2} },
+enum { EMPTY, CHARACTER, WALL, BOSS, TRASH, MID, HP, DEFENSE, STRENGTH };
+//enum { CHARACTER, MONSTER, ITEM };
 
-     { {0,0,1,0,0,1,1,1}, {0,0,1,0,0,1,1,1}, {0,0,1,0,0,1,1,1}, {0,0,1,0,0,1,1,1} },
+char *arTile[]={"  ","☆","□","※","% ","§ ","♡","♤","♨" };
 
-     { {0,0,-1,0,0,-1,1,-1}, {0,0,0,1,-1,0,-1,-1}, {0,0,-1,0,0,-1,1,-1}, {0,0,0,1,-1,0,-1,-1} },
-
-     { {0,0,-1,-1,0,-1,1,0}, {0,0,-1,0,-1,1,0,-1}, {0,0,-1,-1,0,-1,1,0}, {0,0,-1,0,-1,1,0,-1} },
-
-     { {0,0,-1,0,1,0,-1,-1}, {0,0,0,-1,0,1,-1,1}, {0,0,-1,0,1,0,1,1}, {0,0,0,-1,0,1,1,-1} },
-
-     { {0,0,1,0,-1,0,1,-1}, {0,0,0,1,0,-1,-1,-1}, {0,0,1,0,-1,0,-1,1}, {0,0,0,-1,0,1,1,1} },
-
-     { {0,0,-1,0,1,0,0,1}, {0,0,0,-1,0,1,1,0}, {0,0,-1,0,1,0,0,-1}, {0,0,-1,0,0,-1,0,1} },
+struct characterinfo{//☆
+int level;
+int HP;
+int strength;
+int defense;
+int EXP;
 
 };
 
+struct bossinfo{//※
+int HP,strength,defense;
+};
 
-enum { EMPTY, BRICK, WALL };
+struct trashinfo{//% 
+int HP,strength, defense, exp;
+};
 
-char *arTile[]={". ","☆","□"};
+struct midinfo{//§
+int HP,strength, defense, exp;
+};
 
-//char character="☆";
+
+/*
+struct bossinfo{//※
+int HP=100;
+int strength=20;
+int defense=8;
+};
+
+struct trashinfo{//% 
+int HP=20;
+int strength=3;
+int defense=2;
+int exp=5; //trash를 죽였을 때 얻을 수 있는 경험치
+};
+
+struct midinfo{//§
+int HP=50;
+int strength=8;
+int defense=6;
+int exp=8;
+};*/
+
+char *item_hp = "♡";
+int hp_giving=10;
+
+char *item_defense = "♤";
+int defense_giving=1;
+
+char *item_strength = "♨";
+int strength_giving=1;
 
 int board[BW+2][BH+2];
 
-int nx,ny;
+int nx,ny;//character position
 
-int brick,rot;
-
+int brick, rot;
  
 
 void main()
@@ -66,7 +98,7 @@ void main()
      int x,y;
 
  
-
+	 //setcursortype(NORMALCURSOR);
      setcursortype(NOCURSOR);
 
      randomize();
@@ -75,7 +107,7 @@ void main()
 
      for (x=0;x<BW+2;x++) {
           for (y=0;y<BH+2;y++) {
-              board[x][y] = (y==0 || y==BH+1 || x==0 || x==BW+1) ? WALL:EMPTY;
+              board[x][y] = (y==0 ||y==BH+1||x==0 ||x==1||x==BW+1) ? WALL:EMPTY;
           }
      }
 
@@ -87,7 +119,7 @@ void main()
 
      for (;1;) {
 
-          brick= random(sizeof(Shape)/sizeof(Shape[0]));
+          brick= 1; //random(sizeof(Shape)/sizeof(Shape[0]));
 
           nx=BW/2;
 
@@ -139,17 +171,21 @@ void DrawScreen()
 
  
 
-     for (x=0;x<BW+2;x++) {
+     for (x=0;x<=BW+2;x+=2) {
 
           for (y=0;y<BH+2;y++) {
 
-              gotoxy(BX+x*2,BY+y);
+              gotoxy(BX+x,BY+y);
 
               puts(arTile[board[x][y]]);
 
           }
 
      }
+	 for(y=0;y<BH+2;y++){
+		gotoxy(BX+x,BY+y);
+		puts(arTile[board[BW+x][y]]);
+	 }
 
  
 
@@ -165,6 +201,7 @@ void DrawScreen()
 	 gotoxy(50,11);puts("Strength: ");
 	 gotoxy(50,12);puts("Defense");
 	 gotoxy(50,13);puts("Items: ");
+	 gotoxy(50,14);printf("character position: %d, %d",nx,ny);
 
 	 //monster만났을 때 생기는 부분
 	 gotoxy(50,15);puts("Monster status");
@@ -222,7 +259,7 @@ BOOL ProcessKey()
 
               case LEFT:
 
-                   if (GetAround(nx-1,ny,brick,rot) == EMPTY) {
+                   if (board[nx-1][ny] == EMPTY) {
 
                         PrintBrick(FALSE);
 
@@ -236,7 +273,7 @@ BOOL ProcessKey()
 
               case RIGHT:
 
-                   if (GetAround(nx+1,ny,brick,rot) == EMPTY) {
+                   if (board[nx+1][ny] == EMPTY) {
 
                         PrintBrick(FALSE);
 
@@ -250,7 +287,17 @@ BOOL ProcessKey()
 
               case UP:
 
-                   trot=(rot == 3 ? 0:rot+1);
+				  if (board[nx][ny-1] == EMPTY) {
+
+                        PrintBrick(FALSE);
+
+                        ny--;
+
+                        PrintBrick(TRUE);
+
+                   }
+
+                   /* trot=(rot == 3 ? 0:rot+1);
 
                    if (GetAround(nx,ny,brick,trot) == EMPTY) {
 
@@ -260,17 +307,27 @@ BOOL ProcessKey()
 
                         PrintBrick(TRUE);
 
-                   }
+                   }*/
 
                    break;
 
               case DOWN:
 
-                   if (MoveDown()) {
+				  if (board[nx][ny+1] == EMPTY) {
+
+                        PrintBrick(FALSE);
+
+                        ny++;
+
+                        PrintBrick(TRUE);
+
+                   }
+
+                  /* if (MoveDown()) {
 
                         return TRUE;
 
-                   }
+                   }*/
 
                    break;
 
@@ -278,11 +335,11 @@ BOOL ProcessKey()
 
           } else {
 
-              switch (ch) {
+              switch (ch) {//space를 누를때!!!! item을 먹자~
 
               case ' ':
 
-                   while(MoveDown()==FALSE) {;}
+                   //while(MoveDown()==FALSE) {;}
 
                    return TRUE;
 
@@ -304,31 +361,34 @@ void PrintBrick(BOOL Show)
 
      int i;
 
-     for (i=0;i<4;i++) {
+		 gotoxy(BX+nx, BY+ny);
+		 puts(arTile[Show? CHARACTER:EMPTY]);
+	 /*
+	 for (i=0;i<4;i++) {
 
           gotoxy(BX+(Shape[brick][rot][i].x+nx)*2,BY+Shape[brick][rot][i].y+ny);
 
           puts(arTile[Show ? BRICK:EMPTY]);
 
-     }
+     }*/
 
 }
 
  
 
-int GetAround(int x,int y,int b,int r)
+int GetAround(int x,int y,int b,int r)//얘는 딱히 필요할 것 같지 않다.
 
 {
 
      int i,k=EMPTY;
 
  
+	 //i=1;
+     //for (i=0;i<4;i++) {
 
-     for (i=0;i<4;i++) {
+          k=max(k,board[x][y]);
 
-          k=max(k,board[x+Shape[b][r][i].x][y+Shape[b][r][i].y]);
-
-     }
+    // }
 
      return k;
 
@@ -370,7 +430,7 @@ void TestFull()
 
      for (i=0;i<4;i++) {
 
-          board[nx+Shape[brick][rot][i].x][ny+Shape[brick][rot][i].y]=BRICK;
+          //board[nx+Shape[brick][rot][i].x][ny+Shape[brick][rot][i].y]=BRICK;
 
      }
 
@@ -380,7 +440,7 @@ void TestFull()
 
           for (x=1;x<BW+1;x++) {
 
-              if (board[x][y] != BRICK) break;
+//              if (board[x][y] != BRICK) break;
 
           }
 
